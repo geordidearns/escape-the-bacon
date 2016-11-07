@@ -52,3 +52,19 @@ Webpack takes modules (JS, CSS, Image Assets etc) and bundles them into a single
 
 I installed webpack (globally & locally under the dev environment) and created a webpack.config.js file, which is where you can fully customize it to fit your needs. for reference: http://webpack.github.io/docs/what-is-webpack.html
 
+Onto the code!
+
+Off the bat I had something new to learn which is great! The difference between 'const' and 'let' in the context of ES6.. Usually I would just throw a var in there and that would be fine. BUT with ES6, comes the new way to declare variables which is great for scoping within your project. I'll quickly cover how I interpreted the two, and why not use 'var' like I had always.
+
+var:
+
+Variables defined this way can be redefined and updated. Great in some situations, not so great in others. Let's briefly look at 'why'. Because these can be redefined, it may cause side-effects throughtout your program from using the same naming convention in another file, or if someone unfamiliar with your codebase starts on a new feature and chooses the same variable name. It happens, there's only so many ways you can name certain objects.. But browser won't scream and shout at you that it's broken so you may be trying to hunt down a bug caused by this pretty easily.. These 'vars' are function scoped - meaning they are only available to the function which initialises them, unless they are created outside of a function - which would make them global to the window/program. Not ideal in most cases.
+
+let:
+
+Is block scoped, meaning that it's state is only available within it's block (this could be a function, an 'if' statement or anything with curly braces). But with this, it means that they cannot be redefined while in the same scope. Of course var would let you do this, but again..Bug city! Can 'let' be updated you may ask!? Yes of course, in a similar way to var being re-assigned ( { var cat = 'meow'}; .... cat = 'woof';)
+
+
+const:
+
+Is the more robust version of the above - It cannot be mutated directly (making it a semi-immutable object) as a WHOLE. Meaning, I can change it's properties values (if it is an object), but I can never delete the whole property itself. If you need to lock down the values on the object you could always use Object.freeze() - which means the properties aren't mutatable either. const should be used for variables that will never change, such as keys etc.
