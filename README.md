@@ -68,3 +68,8 @@ Is block scoped, meaning that it's state is only available within it's block (th
 const:
 
 Is the more robust version of the above - It cannot be mutated directly (making it a semi-immutable object) as a WHOLE. Meaning, I can change it's properties values (if it is an object), but I can never delete the whole property itself. If you need to lock down the values on the object you could always use Object.freeze() - which means the properties aren't mutatable either. const should be used for variables that will never change, such as keys etc.
+
+
+SETUP:
+
+Once I had setup the initial gameboard and gameplay variables - I could then create the framework for how the game operated. This includes the setup - creating the sprite assets, laying out the functions which will be used for gameplay, and the helper functions to implement collision logic.
