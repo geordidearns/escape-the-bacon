@@ -1,6 +1,9 @@
 # escape-the-bacon
 Escape the Bacon
 
+install dependencies
+run webpack
+
 Introduction:
 
 These projects on my public Github are serving as an insight into how I work, what I am learning, and may be riddled with errors, or misinformation. I'm completely fine with that because like all things in the development world, it's a constant learning process and forever-changing.
