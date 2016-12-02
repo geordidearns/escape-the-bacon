@@ -48,9 +48,9 @@
 
 	var _helpers = __webpack_require__(1);
 
-	var _helpers2 = _interopRequireDefault(_helpers);
+	var gameHelpers = _interopRequireWildcard(_helpers);
 
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
 	// Initialise all the PIXI classes for use (capitalised for differentiation)
 	var Container = PIXI.Container,
@@ -83,7 +83,7 @@
 	document.body.appendChild(renderer.view);
 
 	// This loads all the images before it runs the setup function, yay!
-	Loader.add(["images/game-board.png", "images/pig.png", "images/hay.png", "images/barn.png"]).load(setup);
+	Loader.add(["images/game-board.png", "images/pig.png", "images/hay.png", "images/barn.png", "images/bacon.png"]).load(setup);
 
 	// Setup function - will be used to set up sprites and game items such as keyboard events
 	function setup() {
@@ -98,28 +98,62 @@
 
 	    // Add the Pig to the Scene
 	    pig = new Sprite(Loader.resources["images/pig.png"].texture);
-	    // Place the cat on the X-Axis
+	    // Place the pig on the X-Axis
 	    pig.x = 68;
-	    // Place the cat halfway down the gameScene
+	    // Place the pig halfway down the gameScene
 	    pig.y = gameScene.height / 2 - pig.height / 2;
-	    // Add the cat to the scene
+	    // Add the pig to the scene
 	    gameScene.addChild(pig);
 
 	    // Add the Hay to the Scene
 	    hay = new Sprite(Loader.resources["images/hay.png"].texture);
-	    // Place the cat on the X-Axis
+	    // Place the hay on the X-Axis
 	    hay.x = gameScene.width - hay.width - 48;
-	    // Place the cat halfway down the gameScene
+	    // Place the hay halfway down the gameScene
 	    hay.y = gameScene.height / 2 - hay.height / 2;
-	    // Add the cat to the scene
+	    // Add the hay to the scene
 	    gameScene.addChild(hay);
 
 	    // Add the Barn to the Scene
 	    barn = new Sprite(Loader.resources["images/barn.png"].texture);
 	    // Place the barn on the X-Axis, not the Y-axis
 	    barn.position.set(10, 0);
-	    // Add the cat to the scene
+	    // Add the barn to the scene
 	    gameScene.addChild(barn);
+
+	    // Bacon Pieces
+	    var numberOfBacons = 6,
+	        spacingBetweenBacons = 48,
+	        xOffset = 150,
+	        speedOfMovement = 2,
+	        directionOfMovement = 1;
+
+	    bacons = [];
+
+	    for (var i = 0; i < numberOfBacons; i++) {
+
+	        var bacon = new Sprite(Loader.resources["images/bacon.png"].texture);
+
+	        // Space the bacon using the value above, times the number of bacons there are
+	        var x = spacingBetweenBacons * i + xOffset;
+	        var y = gameHelpers.randomInt(0, gameStage.height - bacon.height);
+
+	        // Assign the bacons x & y position to the x & y variables
+	        bacon.x = x;
+	        bacon.y = y;
+
+	        // Setting the Bacons vertical velocity: direction being 1 (down) or -1 (up)
+	        bacon.vy = speedOfMovement * directionOfMovement;
+
+	        // Reverse direction for next Bacon piece
+	        directionOfMovement *= -1;
+
+	        // Push each bacon piece into the bacon array
+	        bacons.push(bacon);
+
+	        // Add all the bacons to the game scene
+	        gameScene.addChild(bacon);
+	    }
 
 	    renderer.render(gameStage);
 	};
