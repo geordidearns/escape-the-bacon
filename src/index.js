@@ -34,7 +34,6 @@ Loader
 
 // Setup function - will be used to set up sprites and game items such as keyboard events
 function setup() {
-
   // Create Game scene where the assets will be added to
   gameScene = new Container();
   gameStage.addChild(gameScene);
@@ -71,6 +70,27 @@ function setup() {
   barn.position.set(10,0);
   // Add the barn to the scene
   gameScene.addChild(barn);
+
+  //Create the health bar
+  healthBar = new PIXI.DisplayObjectContainer();
+  healthBar.position.set(gameStage.width - 170, 6)
+  gameScene.addChild(healthBar);
+
+  //Create the black background rectangle
+  let innerBar = new PIXI.Graphics();
+  innerBar.beginFill(0x000000);
+  innerBar.drawRect(0, 0, 128, 8);
+  innerBar.endFill();
+  healthBar.addChild(innerBar);
+
+  //Create the front red rectangle
+  let outerBar = new PIXI.Graphics();
+  outerBar.beginFill(0xFF3300);
+  outerBar.drawRect(0, 0, 128, 8);
+  outerBar.endFill();
+  healthBar.addChild(outerBar);
+
+  healthBar.outer = outerBar;
 
   // Bacon Pieces attributes
   let numberOfBacons        = 6,
@@ -114,8 +134,6 @@ function setup() {
         right = gameHelpers.keyboard(39),
         down  = gameHelpers.keyboard(40);
 
-        console.log(gameHelpers.keyboard());
-
     // On key press - update pig's x & y-axis movements according to the direction needed to go. Natural 
     // direction is down, and right (positive values), up and left are negative values. These values represent
     // the pixels to move the Pig.
@@ -158,9 +176,49 @@ function gameLoop() {
 
 // Play Function - Where the game logic lives, setting the state of the game if ended or not
 function play() {
-
+  // Move the pig along the x or y axis in relation to the keyboard events
   pig.x += pig.vx;
   pig.y += pig.vy;
+
+  // Container the pig within the game scene
+  gameHelpers.contain(pig, {x: 32, y: 32, width: 488, height: 480});
+
+  let pigHit = false;
+
+  bacons.forEach(function(baconObj) {
+    // Move bacon along the Y-Axis
+    baconObj.y += baconObj.vy;
+    // Contain the bacon within the game scene
+    let baconHitsWall = gameHelpers.contain(baconObj, {x: 32, y: 32, width: 488, height: 480});
+
+    if (baconHitsWall === "top" || baconHitsWall === "bottom") {
+      baconObj.vy *= -1;
+    }
+
+    if(gameHelpers.collisionCheckRectangle(pig, baconObj)) {
+      pigHit = true;
+    }
+  });
+
+  if(pigHit) {
+    pig.alpha = 0.5;
+    healthBar.outer.width -= 1;
+  } else {
+    pig.alpha = 1;
+  }
+
+  if(gameHelpers.collisionCheckRectangle(pig, hay)) {
+    hay.x = pig.x - 12;
+    hay.y = pig.y;
+  }
+
+  if (gameHelpers.collisionCheckRectangle(hay, barn)) {
+    state = end;
+  }
+
+  if (healthBar.outer.width < 0) {
+    state = end;
+  }
 
 };
 
