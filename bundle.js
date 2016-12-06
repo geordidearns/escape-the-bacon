@@ -88,10 +88,13 @@
 
 	// Setup function - will be used to set up sprites and game items such as keyboard events
 	function setup() {
-
 	  // Create Game scene where the assets will be added to
 	  gameScene = new Container();
 	  gameStage.addChild(gameScene);
+
+	  gameOverScene = new Container();
+	  gameOverScene.visible = false;
+	  gameStage.addChild(gameOverScene);
 
 	  // Add gameboard to Scene
 	  gameBoard = new Sprite(Loader.resources["images/game-board.png"].texture);
@@ -100,7 +103,7 @@
 	  // Add the Pig to the Scene
 	  pig = new Sprite(Loader.resources["images/pig.png"].texture);
 	  // Place the pig on the X-Axis
-	  pig.x = 68;
+	  pig.x = 30;
 	  // Place the pig halfway down the gameScene
 	  pig.y = gameScene.height / 2 - pig.height / 2;
 	  // Set the X-axis velocity to zero (not moving)
@@ -122,15 +125,36 @@
 	  // Add the Barn to the Scene
 	  barn = new Sprite(Loader.resources["images/barn.png"].texture);
 	  // Place the barn on the X-Axis, not the Y-axis
-	  barn.position.set(10, 0);
+	  barn.position.set(35, 0);
 	  // Add the barn to the scene
 	  gameScene.addChild(barn);
 
+	  //Create the health bar
+	  healthBar = new PIXI.DisplayObjectContainer();
+	  healthBar.position.set(gameStage.width - 170, 12);
+	  gameScene.addChild(healthBar);
+
+	  //Create the black background rectangle
+	  var innerBar = new PIXI.Graphics();
+	  innerBar.beginFill(0x000000);
+	  innerBar.drawRect(0, 0, 128, 8);
+	  innerBar.endFill();
+	  healthBar.addChild(innerBar);
+
+	  //Create the front red rectangle
+	  var outerBar = new PIXI.Graphics();
+	  outerBar.beginFill(0xff5c5c);
+	  outerBar.drawRect(0, 0, 128, 8);
+	  outerBar.endFill();
+	  healthBar.addChild(outerBar);
+
+	  healthBar.outer = outerBar;
+
 	  // Bacon Pieces attributes
-	  var numberOfBacons = 6,
+	  var numberOfBacons = 8,
 	      spacingBetweenBacons = 48,
-	      xOffset = 150,
-	      speedOfMovement = 2,
+	      xOffset = 120,
+	      speedOfMovement = 3,
 	      directionOfMovement = 1;
 
 	  bacons = [];
@@ -160,15 +184,11 @@
 	    gameScene.addChild(bacon);
 	  }
 
-	  // Pig Movement
-
-	  //Capture the keyboard arrow keys
+	  // Capture the keyboard arrow keys
 	  var left = gameHelpers.keyboard(37),
 	      up = gameHelpers.keyboard(38),
 	      right = gameHelpers.keyboard(39),
 	      down = gameHelpers.keyboard(40);
-
-	  console.log(gameHelpers.keyboard());
 
 	  // On key press - update pig's x & y-axis movements according to the direction needed to go. Natural 
 	  // direction is down, and right (positive values), up and left are negative values. These values represent
@@ -176,7 +196,6 @@
 
 	  // On key release - Check if the opposite key is not pressed, and that the pig is not moving along the
 	  // Opposite Axis
-
 
 	  left.press = function () {
 	    pig.vx = -5, pig.vy = 0;
@@ -218,6 +237,7 @@
 	  //Loop this function 60 times per second
 	  requestAnimationFrame(gameLoop);
 
+	  // Update the current game state at 60fps
 	  state();
 
 	  //Render the stage
@@ -226,13 +246,59 @@
 
 	// Play Function - Where the game logic lives, setting the state of the game if ended or not
 	function play() {
-
+	  // Move the pig along the x or y axis in relation to the keyboard events
 	  pig.x += pig.vx;
 	  pig.y += pig.vy;
+
+	  // Container the pig within the game scene
+	  gameHelpers.contain(pig, { x: 32, y: 32, width: 488, height: 480 });
+
+	  var pigHit = false;
+
+	  bacons.forEach(function (baconObj) {
+	    // Move bacon along the Y-Axis
+	    baconObj.y += baconObj.vy;
+	    // Contain the bacon within the game scene
+	    var baconHitsWall = gameHelpers.contain(baconObj, { x: 32, y: 32, width: 488, height: 480 });
+
+	    if (baconHitsWall === "top" || baconHitsWall === "bottom") {
+	      baconObj.vy *= -1;
+	    }
+
+	    if (gameHelpers.collisionCheckRectangle(pig, baconObj)) {
+	      pigHit = true;
+	    }
+	  });
+
+	  if (pigHit) {
+	    // Make piggy opaque if it gets hit, same with the hay
+	    pig.alpha = 0.5;
+	    hay.alpha = 0.5;
+	    healthBar.outer.width -= 4;
+	  } else {
+	    pig.alpha = 1;
+	    hay.alpha = 1;
+	  }
+
+	  if (gameHelpers.collisionCheckRectangle(pig, hay)) {
+	    hay.x = pig.x - 12;
+	    hay.y = pig.y;
+	  }
+
+	  if (gameHelpers.collisionCheckRectangle(hay, barn)) {
+	    state = end;
+	  }
+
+	  if (healthBar.outer.width < 0) {
+	    state = end;
+	  }
 	};
 
 	// End Function - what happens when the game has ended?
-	function end() {};
+	function end() {
+	  gameScene.visible = false;
+	  gameOverScene.visible = true;
+	};
 
 /***/ },
 /* 1 */
@@ -245,6 +311,8 @@
 	});
 	exports.randomInt = randomInt;
 	exports.keyboard = keyboard;
+	exports.contain = contain;
+	exports.collisionCheckRectangle = collisionCheckRectangle;
 	// Helper functions to assist gameplay. Collision detection, Keyboard events, useful Math functions etc
 
 	// Returns a random integer
@@ -287,6 +355,97 @@
 	  window.addEventListener("keydown", key.downHandler.bind(key), false);
 
 	  return key;
+	}
+
+	// Take a sprite, and a container and use the x, y , width and height attributes to 
+	// determine if the sprite has hit the edges of the the container specified
+	function contain(sprite, container) {
+	  var collision = undefined;
+
+	  // Check Left
+	  if (sprite.x < container.x) {
+	    sprite.x = container.x;
+	    collision = "left";
+	  }
+
+	  // Check Top
+	  if (sprite.y < container.y) {
+	    sprite.y = container.y;
+	    collision = "top";
+	  }
+
+	  // Check Right
+	  if (sprite.x + sprite.width > container.width) {
+	    sprite.x = container.width - sprite.width;
+	    collision = "right";
+	  }
+
+	  // Check Bottom
+	  if (sprite.y + sprite.height > container.height) {
+	    sprite.y = container.height - sprite.height;
+	    collision = "bottom";
+	  }
+
+	  // return the state of collision (if it has hit the sidess)
+	  return collision;
+	}
+
+	// Collision detection for rectangle shapes.
+	function collisionCheckRectangle(rectOne, rectTwo) {
+	  // Variables that need to be calculated for the collision
+	  var hit = void 0,
+	      combinedHalfWidths = void 0,
+	      combinedHalfHeights = void 0,
+	      vx = void 0,
+	      vy = void 0;
+
+	  // No collision by default
+	  hit = false;
+
+	  // rectOne X-Axis center-point
+	  rectOne.centerX = rectOne.x + rectOne.width / 2;
+	  // rectOne Y-Axis center-point
+	  rectOne.centerY = rectOne.y + rectOne.height / 2;
+
+	  // rectTwo X-Axis center-point
+	  rectTwo.centerX = rectTwo.x + rectTwo.width / 2;
+	  // rectTwo Y-Axis center-point
+	  rectTwo.centerY = rectTwo.y + rectTwo.height / 2;
+
+	  // rectOne Half-width
+	  rectOne.halfWidth = rectOne.width / 2;
+	  // rectOne Half-width
+	  rectOne.halfHeight = rectOne.height / 2;
+
+	  // rectTwo Half-width
+	  rectTwo.halfWidth = rectTwo.width / 2;
+	  // rectTwo Half-width
+	  rectTwo.halfHeight = rectTwo.height / 2;
+
+	  // Distance vector between sprites
+	  vx = rectOne.centerX - rectTwo.centerX;
+	  vy = rectOne.centerY - rectTwo.centerY;
+
+	  // Combine the half widths
+	  combinedHalfWidths = rectOne.halfWidth + rectTwo.halfWidth;
+	  combinedHalfHeights = rectOne.halfHeight + rectTwo.halfHeight;
+
+	  // Check for collisions on the X-Axis
+	  if (Math.abs(vx) < combinedHalfWidths) {
+
+	    // Check to see if a collision is happening on the Y-Axis
+	    if (Math.abs(vy) < combinedHalfHeights) {
+	      // Collision!
+	      hit = true;
+	    } else {
+	      hit = false;
+	    }
+	  } else {
+	    hit = false;
+	  }
+
+	  // Return the state of 'hit' (true or false)
+	  return hit;
 	}
 
 /***/ }
