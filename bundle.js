@@ -92,6 +92,10 @@
 	  gameScene = new Container();
 	  gameStage.addChild(gameScene);
 
+	  gameOverScene = new Container();
+	  gameOverScene.visible = false;
+	  gameStage.addChild(gameOverScene);
+
 	  // Add gameboard to Scene
 	  gameBoard = new Sprite(Loader.resources["images/game-board.png"].texture);
 	  gameScene.addChild(gameBoard);
@@ -99,7 +103,7 @@
 	  // Add the Pig to the Scene
 	  pig = new Sprite(Loader.resources["images/pig.png"].texture);
 	  // Place the pig on the X-Axis
-	  pig.x = 68;
+	  pig.x = 30;
 	  // Place the pig halfway down the gameScene
 	  pig.y = gameScene.height / 2 - pig.height / 2;
 	  // Set the X-axis velocity to zero (not moving)
@@ -121,13 +125,13 @@
 	  // Add the Barn to the Scene
 	  barn = new Sprite(Loader.resources["images/barn.png"].texture);
 	  // Place the barn on the X-Axis, not the Y-axis
-	  barn.position.set(10, 0);
+	  barn.position.set(35, 0);
 	  // Add the barn to the scene
 	  gameScene.addChild(barn);
 
 	  //Create the health bar
 	  healthBar = new PIXI.DisplayObjectContainer();
-	  healthBar.position.set(gameStage.width - 170, 6);
+	  healthBar.position.set(gameStage.width - 170, 12);
 	  gameScene.addChild(healthBar);
 
 	  //Create the black background rectangle
@@ -139,7 +143,7 @@
 
 	  //Create the front red rectangle
 	  var outerBar = new PIXI.Graphics();
-	  outerBar.beginFill(0xFF3300);
+	  outerBar.beginFill(0xff5c5c);
 	  outerBar.drawRect(0, 0, 128, 8);
 	  outerBar.endFill();
 	  healthBar.addChild(outerBar);
@@ -147,10 +151,10 @@
 	  healthBar.outer = outerBar;
 
 	  // Bacon Pieces attributes
-	  var numberOfBacons = 6,
+	  var numberOfBacons = 8,
 	      spacingBetweenBacons = 48,
-	      xOffset = 150,
-	      speedOfMovement = 2,
+	      xOffset = 120,
+	      speedOfMovement = 3,
 	      directionOfMovement = 1;
 
 	  bacons = [];
@@ -179,8 +183,6 @@
 	    // Add all the bacons to the game scene
 	    gameScene.addChild(bacon);
 	  }
-
-	  // Pig Movement Logic
 
 	  // Capture the keyboard arrow keys
 	  var left = gameHelpers.keyboard(37),
@@ -269,10 +271,13 @@
 	  });
 
 	  if (pigHit) {
+	    // Make piggy opaque if it gets hit, same with the hay
 	    pig.alpha = 0.5;
-	    healthBar.outer.width -= 1;
+	    hay.alpha = 0.5;
+	    healthBar.outer.width -= 4;
 	  } else {
 	    pig.alpha = 1;
+	    hay.alpha = 1;
 	  }
 
 	  if (gameHelpers.collisionCheckRectangle(pig, hay)) {
@@ -290,7 +295,10 @@
 	};
 
 	// End Function - what happens when the game has ended?
-	function end() {};
+	function end() {
+	  gameScene.visible = false;
+	  gameOverScene.visible = true;
+	};
 
 /***/ },
 /* 1 */
